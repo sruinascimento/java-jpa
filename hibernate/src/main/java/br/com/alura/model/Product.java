@@ -2,6 +2,7 @@ package br.com.alura.model;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "products")
@@ -12,8 +13,23 @@ public class Product {
     private String name;
     private String description;
     private BigDecimal price;
+    @Column(name = "date_register")
+    private LocalDate dateRegister = LocalDate.now();
 
-    public Long getId() {
+    @ManyToOne
+    private Category category;
+
+    public Product(String name, String description, BigDecimal price, Category category) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.category = category;
+    }
+
+    public Product() {
+
+    }
+    private Long getId() {
         return id;
     }
 

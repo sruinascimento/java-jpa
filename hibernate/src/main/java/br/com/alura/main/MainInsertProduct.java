@@ -1,6 +1,8 @@
 package br.com.alura.main;
 
+import br.com.alura.dao.CategoryDao;
 import br.com.alura.dao.ProductDao;
+import br.com.alura.model.Category;
 import br.com.alura.model.Product;
 import br.com.alura.util.JPAUtil;
 
@@ -9,16 +11,15 @@ import java.math.BigDecimal;
 
 public class MainInsertProduct {
     public static void main(String[] args) {
-        Product cellphone = new Product();
-        cellphone.setName("Xiaomi Poco x5 pro");
-        cellphone.setDescription("Ram 8GB, Memory 256GB");
-        cellphone.setPrice(new BigDecimal("2199"));
-
+        Category categoryCellphone = new Category("cellphone");
+        Product cellphone = new Product("Xiaomi Poco x5 pro", "Ram 8GB, Memory 256GB", new BigDecimal("2199"), categoryCellphone);
 
         EntityManager entityManager = JPAUtil.getEntityManager();
+        CategoryDao categoryDao = new CategoryDao(entityManager);
         ProductDao productDao = new ProductDao(entityManager);
         //iniciar as transações
         entityManager.getTransaction().begin();
+        categoryDao.insert(categoryCellphone);
         productDao.insert(cellphone);
         entityManager.getTransaction().commit();
         entityManager.close();

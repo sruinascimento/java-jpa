@@ -308,3 +308,168 @@ public class MainInsertProduct {
 ```
  No código acima as transações ainda estão no Main, mas já organizamos e diminuímos linhas.
 
+## Adicionando novos atributos na classe Product
+
+```java
+    import javax.persistence.Column;
+
+@Entity
+@Table(name = "products")
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String description;
+    private BigDecimal price;
+    @Column(name = "date_register")
+    private LocalDate dateRegister = LocalDate.now();
+    @Enumerated(EnumType.STRING)
+    private Category category;
+```
+
+O código acima representa apenas um trecho de código, entretanto estamos adicionando um atributo chamado `category`
+e definindo a anotação `@Enumerated(EnumType.STRING)` para que possa ser armazenado no banco de dados, a string 
+de forma literal da constante do Enum.
+
+Segue abaixo o código da Enum:
+
+```java
+public enum Category {
+    CELLPHONES,
+    INFORMATIC,
+    BOOKS
+}
+```
+
+Caso não fosse usando a anotação `@Enumerated(EnumType.STRING)` no banco de dados seria gravado o número referente
+a ordem das constantes do Enum.
+
+Obs: Ao criar esse atributo, assim que eu executar o código para fazer o insert no banco de dados, o hibernate
+vai atualizar a tabela e adicionar a coluna para categoria e para data de registro.
+
+## Relacionamentos
+Até agora, estamos trabalhando somente com uma tabela e sem relacionamento.
+Porém é necessário realizar esse mapeamento.
+
+A enum `Category` se tornará uma classe para ser uma entidade.
+
+```java
+package br.com.alura.model;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "categories")
+public class Category {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+   private String name;
+
+    public Category(String name) {
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+```
+
+E em consequência, faremos a `CategoryDao`, que irá ter o mesmo funcionamento da `ProductDao`.
+ ```java
+package br.com.alura.dao;
+
+import br.com.alura.model.Category;
+
+import javax.persistence.EntityManager;
+
+public class CategoryDao {
+    private EntityManager entityManager;
+
+    public CategoryDao(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
+    public void insert(Category category) {
+        this.entityManager.persist(category);
+    }
+}
+
+```
+
+Agora é necessário mapear esse relacionamento. Na classe `Product` precisaremos utilizar a anotação
+`@ManyToOne` Pois pois ter várias categorias mas cada produto só terá um categoria. Essa modelagem vai depender 
+do relacionamento da tabela. Muitos produtos para uma categoria.
+
+E com isso precisamos persistir essa `Category` antes de persistir o `Product`:
+Segue o código:
+
+
+```java
+package br.com.alura.main;
+
+import br.com.alura.dao.CategoryDao;
+import br.com.alura.dao.ProductDao;
+import br.com.alura.model.Category;
+import br.com.alura.model.Product;
+import br.com.alura.util.JPAUtil;
+
+import javax.persistence.EntityManager;
+import java.math.BigDecimal;
+
+public class MainInsertProduct {
+    public static void main(String[] args) {
+        Category categoryCellphone = new Category("cellphone");
+        Product cellphone = new Product("Xiaomi Poco x5 pro", "Ram 8GB, Memory 256GB", new BigDecimal("2199"), categoryCellphone);
+
+        EntityManager entityManager = JPAUtil.getEntityManager();
+        CategoryDao categoryDao = new CategoryDao(entityManager);
+        ProductDao productDao = new ProductDao(entityManager);
+        //iniciar as transações
+        entityManager.getTransaction().begin();
+        categoryDao.insert(categoryCellphone);
+        productDao.insert(cellphone);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+    }
+
+}
+
+```
+
+
+## Ciclo de vida 
+
+#### Transiente
+Quando criamos um objeto que será armazenado no banco de dados como `new Category("Cellphone")`, nesse caso
+é considerado que esse objeto está **transiente**, pois não tem nada haver com a parte de persistência, então nesse
+estado pode-se realizar qualquer transação que o nosso objeto não será gravado no banco de dados.
+
+##### Managed
+Após usarmos a função `persist()` com o `EntityManager` nesse momento a nossa entidade, será gerenciada pela JPA, 
+então está no estado **managed**, a jpa está 'de olho' nessa entidade, pois qualquer alteração que fizermos referente a 
+essa entidade, tudo isso estará a ser rastreado pela JPA, sincronizada com o banco de dados.
+
+Agora quando usarmos o método `commit`, será salvo na base de dados.
+
+#### Detached
+Após usarmos a função `close()`, após isso a JPA não estará mais rastreando a entidade, pois já fechou a transação.
+
+<img src="https://i.ibb.co/Lp8LB1h/lifecycle.png">
+
+
