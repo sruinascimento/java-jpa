@@ -1,10 +1,10 @@
 package br.com.alura.main;
 
+import br.com.alura.dao.ProductDao;
 import br.com.alura.model.Product;
+import br.com.alura.util.JPAUtil;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.math.BigDecimal;
 
 public class MainInsertProduct {
@@ -14,12 +14,12 @@ public class MainInsertProduct {
         cellphone.setDescription("Ram 8GB, Memory 256GB");
         cellphone.setPrice(new BigDecimal("2199"));
 
-        //Factory passando o persistenciUnitName no arquivo persistence.xml
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory("store");
-        EntityManager entityManager = factory.createEntityManager();
+
+        EntityManager entityManager = JPAUtil.getEntityManager();
+        ProductDao productDao = new ProductDao(entityManager);
         //iniciar as transações
         entityManager.getTransaction().begin();
-        entityManager.persist(cellphone);
+        productDao.insert(cellphone);
         entityManager.getTransaction().commit();
         entityManager.close();
     }
