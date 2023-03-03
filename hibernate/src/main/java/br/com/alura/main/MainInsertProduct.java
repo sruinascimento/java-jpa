@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 public class MainInsertProduct {
     public static void main(String[] args) {
-        Category categoryCellphone = new Category("cellphone");
+        Category categoryCellphone = new Category("Eletronic");
         Product cellphone = new Product("Xiaomi Poco x5 pro", "Ram 8GB, Memory 256GB", new BigDecimal("2199"), categoryCellphone);
 
         EntityManager entityManager = JPAUtil.getEntityManager();
@@ -20,7 +20,10 @@ public class MainInsertProduct {
         //iniciar as transações
         entityManager.getTransaction().begin();
         categoryDao.insert(categoryCellphone);
-        productDao.insert(cellphone);
+        entityManager.flush();
+        categoryDao.delete(categoryCellphone);
+
+//        productDao.insert(cellphone);
         entityManager.getTransaction().commit();
         entityManager.close();
     }

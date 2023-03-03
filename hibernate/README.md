@@ -473,3 +473,63 @@ Após usarmos a função `close()`, após isso a JPA não estará mais rastreand
 <img src="https://i.ibb.co/Lp8LB1h/lifecycle.png">
 
 
+## Atualização
+Funciona com alterações no objeto que deve estar no estado manageg, caso esteja 
+transiente, use o `merge()` para garantir que o objeto não esteja no estado **transiente**.
+Após isso basta realizar o commit que o banco de dados irá atualizar.
+
+## Delete
+Para remover elementos utilize o `merge()` para garantir que o objeto não esteja no estado 
+**transiente** e após isso use o método `remove()`
+
+Segue abaixo uma imagem com o ciclo completo de estado de uma entidade na JPA.
+
+<img src="https://uploaddeimagens.com.br/images/004/376/477/full/state-transition.png?1677871113">
+
+## Resultado final da classe `CategoryDao`
+
+```java
+package br.com.alura.dao;
+
+import br.com.alura.model.Category;
+
+import javax.persistence.EntityManager;
+
+public class CategoryDao {
+    private EntityManager entityManager;
+
+    public CategoryDao(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
+    public void insert(Category category) {
+        this.entityManager.persist(category);
+    }
+    public void update(Category category) {
+        this.entityManager.merge(category);
+    }
+
+    public void delete(Category category) {
+        this.entityManager.remove(this.entityManager.merge(category));
+    }
+}
+
+```
+
+**Observação:** até então estamos apenas modificando elementos que estão sendo inseridos, e caso queiramos modicar ou apagar
+elementos que estão na base de dados.
+
+## SELECT
+`find()`métod que retorna uma entidade através do id. Segue o código abaixo de exemplo:
+ ```java
+ entityManager.find(Product.class, 4l);
+```
+O trecho de código acima irá retornar um produto, pois como argumento foi passado qual classe era a entidade
+e qual era o id.
+
+Mas esse só retorna um elemento.
+
+Caso eu queira buscar todos produtos de uma determinada entidade
+
+
+## SELECT com filtro
